@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CloudApp {
+  id          String    @id @db.VarChar(36)
+  name        String    @db.VarChar(35)
+  
+  // ok
+  // authorizes CloudAppAuthorize[]
+
+  // error
+  authorizes AuthorizesOnCloudApps[]
+
+  @@map("t_app")
+}
+
+model CloudAppAuthorize {
+  id String @id @db.VarChar(36)
+
+  app_id String @db.VarChar(36)
+
+  user_id String @db.VarChar(36)
+
+  updated_at DateTime? @db.Timestamptz(6)
+  updated_by String?   @db.VarChar(36)
+
+  // ok
+  // app CloudApp @relation(fields: [app_id], references: [id])
+
+  // error
+  apps AuthorizesOnCloudApps[]
+
+  @@unique([app_id, user_id])
+  @@index([app_id, user_id])
+  @@map("t_app_authorize")
+}
+
+model AuthorizesOnCloudApps {
+  app    CloudApp @relation(fields: [app_id], references: [id])
+  app_id String   @db.VarChar(36)
+
+  authorize    CloudAppAuthorize @relation(fields: [authorize_id], references: [id])
+  authorize_id String            @db.VarChar(36)
+
+  created_at DateTime  @db.Timestamptz(6)
+  created_by String    @db.VarChar(36)
+  updated_at DateTime? @db.Timestamptz(6)
+  updated_by String?   @db.VarChar(36)
+
+  @@id([app_id, authorize_id])
+  @@map("t_authorize_on_app")
+}
